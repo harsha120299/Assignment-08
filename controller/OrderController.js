@@ -23,7 +23,12 @@ export function populateItemDropdown() {
     }
 }
 
+
 $(document).ready(function () {
+    let subTotal = 0;
+    let totalAmount = 0;
+
+    generatedOrderId();
 
     function generatedOrderId() {
         let nextOrderId = orderDB.length + 1;
@@ -51,8 +56,6 @@ $(document).ready(function () {
             $("#addOrderBtn").prop("disabled", true);
         }
     }
-
-    generatedOrderId();
     populateCustomerDropdown();
     populateItemDropdown();
 
@@ -102,9 +105,6 @@ $(document).ready(function () {
         checkFormValidity();
     });
 
-    let tempOrders = [];
-    let totalAmount = 0;
-
     function createOrder(orderId, customerId, customerName, customerSalary, customerAddress, itemCode, itemName, itemQty, itemUnitPrice, orderQty) {
         return {
             orderId: orderId,
@@ -133,23 +133,17 @@ $(document).ready(function () {
         let itemUnitPrice = parseFloat($("#orderItemUnitPrice").val());
         let orderQty = parseInt($("#orderPlaceQty").val());
 
-        const existingOrder = orderDB.find(order => order.orderId === orderId);
-        if (existingOrder) {
-            alert("Order ID already exists! Please generate a new ID.");
-            return;
-        }
+        
 
         let newOrder = createOrder(orderId, customerId, customerName, customerSalary, customerAddress, itemCode, itemName, itemQty, itemUnitPrice, orderQty);
 
-        tempOrders.push(newOrder);
         orderDB.push(newOrder);
         addOrderToTable(newOrder);
 
-        totalAmount += parseFloat(newOrder.totalAmount);
+        subTotal += parseFloat(newOrder.totalAmount);
         updateTotalAmount();
 
-        clearCustomerItemDetails();
-        generatedOrderId();
+        clearItemDetails();
 
         $("#addOrderBtn").prop("disabled", true);
     });
@@ -168,17 +162,98 @@ $(document).ready(function () {
     }
 
     function updateTotalAmount() {
-        let total = totalAmount.toFixed(2);
-        let subTotal = total;
-        $("#total").text("Total :"+total+"RS/="); 
-        $("#subTotal").text("Total :"+subTotal+"RS/="); 
+        let discount = parseFloat($("#discount").val().trim()) || 0;
+        let discountedAmount = (subTotal * (discount / 100)).toFixed(2);
+        let finalAmount = (subTotal - discountedAmount).toFixed(2);
 
+        $("#total").text("Subtotal: " + subTotal.toFixed(2) + " RS");
+        $("#discountAmount").text("Discount: " + discountedAmount + " RS");
+        $("#subTotal").text("Total : " + finalAmount + " RS");
 
+        totalAmount = finalAmount;
     }
 
-    function clearCustomerItemDetails() {
+    $("#discount").on("input", function () {
+        updateTotalAmount();
+    });
+
+    $("#cash").on("input", function () {
+        let cashPaid = parseFloat($(this).val().trim()) || 0;
+        let discount = parseFloat($("#discount").val().trim()) || 0;
+        let discountedAmount = (subTotal * (discount / 100)).toFixed(2);
+        let finalAmount = (subTotal - discountedAmount).toFixed(2);
+    
+        if (cashPaid < finalAmount) {
+            $("#cashError").text("Cash paid cannot be less than the total amount after discount.");
+            $("#balance").val("");
+        } else {
+            $("#cashError").text("");
+        }
+    
+        if (cashPaid > finalAmount) {
+            let balance = cashPaid - finalAmount;
+            $("#balance").val(balance.toFixed(2));
+        } else {
+            $("#balance").val("");
+        }
+    });
+    
+    $("#discount").on("input", function () {
+        let discount = parseFloat($(this).val().trim()) || 0;
+        let discountedAmount = (subTotal * (discount / 100)).toFixed(2);
+        let finalAmount = (subTotal - discountedAmount).toFixed(2);
+    
+        $("#total").text("Subtotal: " + subTotal.toFixed(2) + " RS");
+        $("#discountAmount").text("Discount: " + discountedAmount + " RS");
+        $("#subTotal").text("Total: " + finalAmount + " RS");
+    
+        $("#cash").trigger("input");
+    });
+    
+    function clearItemDetails() {
+        $("#orderItemID, #orderItemName, #orderItemQty, #orderItemUnitPrice, #orderPlaceQty").val("");
+        $("#cmbItemId").val("Select Item");
+    }
+    function clearAllDetails() {
         $("#orderCustomerID, #orderCustomerName, #orderCustomerSalary, #orderCustomerAddress").val("");
         $("#orderItemID, #orderItemName, #orderItemQty, #orderItemUnitPrice, #orderPlaceQty").val("");
+        $("#cash ,#balance ,#discount ").val("");
+        $("#cmbItemId").val("Select Item");
+        $("#cmbCustomerId").val("Select Customer");
+        $("#total").text("Subtotal: 0.00 RS");
+        $("#subTotal").text("Total: 0.00 RS");
     }
 
+    function handlePurchase() {
+        let orderId = $("#orderID").val();
+        let customerId = $("#orderCustomerID").val();
+        let customerName = $("#orderCustomerName").val();
+        let customerSalary = $("#orderCustomerSalary").val();
+        let customerAddress = $("#orderCustomerAddress").val();
+        let itemCode = $("#orderItemID").val();
+        let itemName = $("#orderItemName").val();
+        let itemQty = $("#orderItemQty").val();
+        let itemUnitPrice = parseFloat($("#orderItemUnitPrice").val());
+        let orderQty = parseInt($("#orderPlaceQty").val());
+    
+        let newOrder = createOrder(orderId, customerId, customerName, customerSalary, customerAddress, itemCode, itemName, itemQty, itemUnitPrice, orderQty);
+    
+        orderDB.push(newOrder);
+    
+    
+        clearAllDetails();
+        
+        $("#orderTable tbody").empty();
+        $("#total").empty;
+        $("#subTotal").empty;
+        
+    
+        $("#addOrderBtn").prop("disabled", true);
+    }
+    
+
+    $("#PurchaseBtn").click(function () {
+        handlePurchase();
+        generatedOrderId();
+    });
 });

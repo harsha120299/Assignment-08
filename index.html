@@ -79,11 +79,33 @@
 
     <section id="dashboard">
       <br />
-      <div class="dashboard-container">
-        <div class="box">Box 1</div>
-        <div class="box">Box 2</div>
-        <div class="box">Box 3</div>
-        <div class="box">Box 4</div>
+      <div class="container" style="margin-top: 100px">
+        <div class="row text-center">
+          <div class="col-md-4 mb-3">
+            <div class="card p-4 border-primary">
+              <div class="card-body">
+                <h5 class="card-title">Customers</h5>
+                <p class="card-text customer-count">Customers: 0</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card p-4 border-success">
+              <div class="card-body">
+                <h5 class="card-title">Items</h5>
+                <p class="card-text item-count">Items: 0</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card p-4 border-warning">
+              <div class="card-body">
+                <h5 class="card-title">Orders</h5>
+                <p class="card-text order-count">Orders: 0</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -270,12 +292,10 @@
                 />
               </div>
             </div>
-            <br />
             <label id="order-lable" for="customerAddress" class="form-label"
               >Address :</label
             >
             <input class="form-control" type="text" id="orderCustomerAddress" />
-            <br />
           </div>
         </div>
 
@@ -353,6 +373,7 @@
                 >Cash :</label
               >
               <input class="form-control" type="text" id="cash" />
+              <span class="text-danger" id="cashError"></span>
             </div>
             <div>
               <label id="order-lable" for="discount" class="form-label"
@@ -376,7 +397,6 @@
         </div>
       </div>
       <div class="container my-4">
-        <h5 class="text-center mb-3">Order Items</h5>
         <div class="table-responsive">
           <table
             class="table table-bordered table-striped table-lg"
